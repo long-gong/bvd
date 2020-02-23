@@ -1,18 +1,24 @@
 #ifndef _BVD_HPP_
 #define _BVD_HPP_
+#include <boost/graph/adjacency_list.hpp>
+#include <boost/graph/max_cardinality_matching.hpp>
 #include <numeric>
+#include <stdexcept>
 #include <vector>
 
 #include "matrix_accessor.h"
-#include <boost/graph/adjacency_list.hpp>
-#include <boost/graph/max_cardinality_matching.hpp>
 
-// using doubly_stochastic_matrix = std::vector<std::vector<unsigned>>;
-
+// value of `mat` will be changed in this API. If you won't use it after this API, please move
+// your object to this API to avoid unnecessary copy!
+//
+// throws std::logic_error on failure
 template <typename doubly_stochastic_matrix>
 void birkhoff_von_neumann_decomposition(
-    doubly_stochastic_matrix mat, std::vector<std::vector<unsigned>> &matches,
-    int row_sum = -1);
+    doubly_stochastic_matrix mat,  // doubly stochatic matrix
+    std::vector<std::vector<unsigned>>
+        &matches,     // matches after decompositions (return)
+    int row_sum = -1  // row sum, -1 ==> need calculation
+);
 
 namespace {
 using namespace boost;
@@ -35,27 +41,26 @@ my_graph build_graph(const matrix_accessor &mat) {
   return g;
 }
 
-} // end namespace
+template <typename doubly_stochastic_matrix>
+unsigned cal_row_sum(const doubly_stochastic_matrix &mat) {
+  unsigned row_sum = 0;
+  for (size_t i = 0; i < mat.cols(); ++i) row_sum += mat(0, i);
 
-// implementation
-template <>
+  return row_sum;
+}
+}  // end namespace
+
+// implementations
+template <typename doubly_stochastic_matrix>
 void birkhoff_von_neumann_decomposition(
-    std::vector<std::vector<unsigned>> mat,
-    std::vector<std::vector<unsigned>> &matches, int row_sum) {
-  if (mat.empty())
-    return;
-
-  if (row_sum < 0)
-    row_sum = std::accumulate(mat.front().cbegin(), mat.front().cend(), (int)0);
-  auto n_vertices = mat.size();
-  DenseMatrix<unsigned> dmat(std::move(mat));
+    doubly_stochastic_matrix dmat, std::vector<std::vector<unsigned>> &matches,
+    int row_sum) {
+  if (row_sum < 0) cal_row_sum(dmat);
 
   auto g = build_graph(dmat);
   matches.clear();
 
-  //   std::vector<graph_traits<my_graph>::vertex_descriptor> mate(n_vertices);
-  //   graph_traits<my_graph>::vertex_iterator vi, vi_end;
-
+  auto n_vertices = dmat.rows();
   std::vector<int> mate(n_vertices * 2);
   while (row_sum > 0) {
     matches.emplace_back(n_vertices, 0);
@@ -63,9 +68,7 @@ void birkhoff_von_neumann_decomposition(
     edmonds_maximum_cardinality_matching(g, &mate[0]);
 
     unsigned delta = std::numeric_limits<unsigned>::max();
-    // for (boost::tie(vi, vi_end) = vertices(g); vi != vi_end; ++vi) {
     for (size_t i = 0; i < n_vertices; ++i) {
-      //   size_t i = *vi;
       size_t j = mate[i] - n_vertices;
 #ifdef DEBUG
       printf("mat(%lu, %lu) = %u\n", i, j, dmat(i, j));
@@ -76,6 +79,8 @@ void birkhoff_von_neumann_decomposition(
 #ifdef DEBUG
     printf("delta = %u\n", delta);
 #endif
+    if (delta == 0)
+      throw std::logic_error("Input matrix is not doubly stochatic");
     // update
     for (size_t i = 0; i < n_vertices; ++i) {
       size_t j = new_match[i];
@@ -88,4 +93,15 @@ void birkhoff_von_neumann_decomposition(
   }
 }
 
-#endif // _BVD_HPP_
+template <>
+void birkhoff_von_neumann_decomposition(
+    std::vector<std::vector<unsigned>> mat,
+    std::vector<std::vector<unsigned>> &matches, int row_sum) {
+  if (mat.empty()) return;
+  if (row_sum < 0)
+    row_sum = std::accumulate(mat.front().cbegin(), mat.front().cend(), (int)0);
+  birkhoff_von_neumann_decomposition(DenseMatrix<unsigned>{std::move(mat)},
+                                     matches, row_sum);
+}
+
+#endif  // _BVD_HPP_
