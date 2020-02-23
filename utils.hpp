@@ -40,8 +40,8 @@ template <typename matrix>
 inline void padding_to_doubly_stochastic(
     matrix &mat,                          // non-negative square matrix
     unsigned w,                           // maximum row sum or col sum
-    std::vector<unsigned> row_sums = {},  // sums of each row
-    std::vector<unsigned> col_sums = {}   // sums of each column
+    const std::vector<unsigned>& row_sums = {},  // sums of each row
+    const std::vector<unsigned>& col_sums = {}   // sums of each column
 ) {
   const size_t m = mat.rows();
   if (m == 0) return;
