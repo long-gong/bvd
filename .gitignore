@@ -1,0 +1,8 @@
+.vscode
+cmake-*
+build
+build-*
+
+/*.o
+/bvd_demo
+/demo.txt
