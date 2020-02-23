@@ -3,7 +3,7 @@
 ## Pre-requisites
 
 ```bash
-sudo apt-get install libboost-graph-dev
+sudo apt-get install libboost-graph-dev libeigen3-dev
 ```
 
 ## Padding a matrix to doubly stochastic 
