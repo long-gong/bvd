@@ -13,6 +13,7 @@ public:
 
 private:
   std::vector<std::vector<T>> data_;
-};
+}; // DenseMatrix
+
 
 #endif // _MATRIX_ACCESSOR_H_
