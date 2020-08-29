@@ -1,6 +1,6 @@
 CXX = g++
 # CXXFLAGS = -Wall -O3 -DDEBUG
-CXXFLAGS = -Wall -O3  
+CXXFLAGS = -Wall -O3  -std=c++11
 LDFLAGS = -lboost_graph 
 RM = gio trash -f
 

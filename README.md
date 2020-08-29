@@ -1,5 +1,7 @@
 # Birkhoff–von Neumann Decomposition
 
+[![Build Status](https://travis-ci.org/long-gong/bvd.svg?branch=master)](https://travis-ci.org/long-gong/bvd)
+
 ## Pre-requisites
 
 ```bash
